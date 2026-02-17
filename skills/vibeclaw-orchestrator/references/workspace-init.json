@@ -1,0 +1,133 @@
+{
+  "product": {
+    "name": "YOUR_PRODUCT_NAME",
+    "url": "https://yourproduct.com",
+    "description": "One-liner describing your product",
+    "category": "SaaS",
+    "competitors": ["Competitor A", "Competitor B", "Competitor C"],
+    "targetAudience": "Startup founders and small business owners",
+    "uniqueSellingPoint": "What makes your product different"
+  },
+  "platforms": {
+    "x": {
+      "enabled": true,
+      "dailyReplyLimit": 150,
+      "accountHandle": "@yourhandle",
+      "bearerTokenEnv": "X_BEARER_TOKEN"
+    },
+    "reddit": {
+      "enabled": true,
+      "dailyReplyLimit": 15,
+      "subreddits": ["SaaS", "startups", "Entrepreneur", "smallbusiness"],
+      "accountName": "your_reddit_account"
+    },
+    "quora": {
+      "enabled": true,
+      "dailyAnswerLimit": 10,
+      "topics": ["SaaS", "startup-tools", "business-automation"]
+    },
+    "linkedin": {
+      "enabled": true,
+      "dailyPostLimit": 3,
+      "profileUrl": "https://linkedin.com/in/yourprofile"
+    },
+    "youtube": {
+      "enabled": true,
+      "niche": "technology/AI tutorials",
+      "uploadFrequency": "daily",
+      "channelName": "Your Channel Name"
+    },
+    "tiktok": {
+      "enabled": true,
+      "dailyPostLimit": 3,
+      "contentType": "carousel"
+    },
+    "medium": {
+      "enabled": true,
+      "integrationToken": "MEDIUM_TOKEN_ENV"
+    },
+    "devto": {
+      "enabled": true,
+      "apiKeyEnv": "DEVTO_API_KEY"
+    }
+  },
+  "agents": {
+    "intentSniper": {
+      "enabled": true,
+      "platforms": ["reddit", "quora", "x"],
+      "intentKeywords": [
+        "alternative to COMPETITOR",
+        "best CATEGORY tool",
+        "recommend CATEGORY",
+        "looking for CATEGORY",
+        "struggling with PROBLEM"
+      ]
+    },
+    "contentSyndication": {
+      "enabled": true,
+      "topicsPerMonth": 100,
+      "platformsPerTopic": 20,
+      "anchorTextRotation": {
+        "exactMatch": 0.20,
+        "partialMatch": 0.25,
+        "branded": 0.20,
+        "generic": 0.20,
+        "nakedUrl": 0.15
+      }
+    },
+    "directorySubmitter": {
+      "enabled": true,
+      "weeklySubmissions": 10,
+      "tiers": ["tier1", "tier2", "tier3"]
+    },
+    "socialContentFactory": {
+      "enabled": true,
+      "dailyCarousels": 2,
+      "dailyShorts": 2,
+      "weeklyXThreads": 5
+    },
+    "xReplyAgent": {
+      "enabled": true,
+      "dailyLimit": 150,
+      "monitorAccounts": [],
+      "monitorKeywords": []
+    },
+    "jobSniper": {
+      "enabled": true,
+      "targetRoles": ["Marketing Manager", "Content Writer", "SEO Specialist"],
+      "dailyOutreachLimit": 30
+    },
+    "seoGapExploiter": {
+      "enabled": true,
+      "competitorDomains": ["competitor1.com", "competitor2.com"],
+      "monthlyArticles": 30
+    },
+    "communityEngagement": {
+      "enabled": true,
+      "dailyReplies": 10,
+      "platforms": ["discord", "telegram", "slack"]
+    },
+    "youtubeAutomation": {
+      "enabled": true,
+      "niche": "tech tutorials",
+      "dailyLongForm": 1,
+      "dailyShorts": 2
+    }
+  },
+  "budget": {
+    "dailyMaxUsd": 5.00,
+    "alertThresholdUsd": 4.00,
+    "monthlyMaxUsd": 150.00
+  },
+  "learning": {
+    "reviewFrequency": "weekly",
+    "autoCapture": true,
+    "knowledgeFiles": [
+      "platforms.md",
+      "templates.md",
+      "hooks.md",
+      "seo.md",
+      "errors.md"
+    ]
+  }
+}

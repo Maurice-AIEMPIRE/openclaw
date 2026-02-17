@@ -1,0 +1,54 @@
+{
+  "id": "vibeclaw",
+  "name": "Vibeclaw Marketing Suite",
+  "description": "Autonomous marketing agent suite for intent sniping, content syndication, directory submissions, social content, SEO exploitation, community engagement, and YouTube automation",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "workspace": {
+        "type": "string",
+        "description": "Path to Vibeclaw workspace directory for config, logs, drafts, and learnings"
+      },
+      "productName": {
+        "type": "string",
+        "description": "Name of the product being promoted"
+      },
+      "productUrl": {
+        "type": "string",
+        "description": "URL of the product website"
+      },
+      "productDescription": {
+        "type": "string",
+        "description": "Short description of the product"
+      },
+      "dailyBudgetUsd": {
+        "type": "number",
+        "description": "Maximum daily API spend in USD"
+      }
+    }
+  },
+  "uiHints": {
+    "workspace": {
+      "label": "Workspace Path",
+      "help": "Directory where Vibeclaw stores all config, logs, and generated content",
+      "placeholder": "~/vibeclaw-workspace"
+    },
+    "productName": {
+      "label": "Product Name",
+      "help": "The product or service you are promoting"
+    },
+    "productUrl": {
+      "label": "Product URL",
+      "help": "Main website URL for your product"
+    },
+    "productDescription": {
+      "label": "Product Description",
+      "help": "One-liner describing what your product does"
+    },
+    "dailyBudgetUsd": {
+      "label": "Daily Budget (USD)",
+      "help": "Maximum API cost per day across all agents"
+    }
+  }
+}
