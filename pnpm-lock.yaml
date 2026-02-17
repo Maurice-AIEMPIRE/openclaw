@@ -518,6 +518,12 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  extensions/vibeclaw:
+    devDependencies:
+      openclaw:
+        specifier: workspace:*
+        version: link:../..
+
   extensions/voice-call:
     dependencies:
       '@sinclair/typebox':
