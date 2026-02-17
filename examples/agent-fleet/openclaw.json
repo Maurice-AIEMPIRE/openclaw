@@ -1,0 +1,136 @@
+{
+  // ─── Agent Fleet: 3 agents on a $50/month MiniMax budget ───
+  // Ops = content + revenue | Research = model scout + hack hunter | Builder = integrator
+  // Heartbeats run on local LM Studio for $0. MiniMax reserved for real work.
+
+  env: {
+    MINIMAX_API_KEY: "${MINIMAX_API_KEY}",
+    BRAVE_API_KEY: "${BRAVE_API_KEY}",
+  },
+
+  identity: {
+    name: "HQ",
+    theme: "autonomous operations hub",
+  },
+
+  agents: {
+    defaults: {
+      model: { primary: "minimax/MiniMax-M2.1" },
+      heartbeat: {
+        model: "lmstudio/heartbeat-local",
+        ackMaxChars: 300,
+      },
+      timeoutSeconds: 600,
+      thinkingDefault: "low",
+      elevatedDefault: "on",
+      blockStreamingDefault: "off",
+    },
+    list: [
+      {
+        id: "ops",
+        default: true,
+        name: "Ops",
+        workspace: "~/.openclaw/workspace-ops",
+        heartbeat: {
+          every: "30m",
+          target: "telegram",
+          activeHours: { start: "07:00", end: "23:00" },
+          prompt: "Read HEARTBEAT.md. Execute the checklist. If nothing needs attention, reply HEARTBEAT_OK.",
+        },
+      },
+      {
+        id: "research",
+        name: "Research",
+        workspace: "~/.openclaw/workspace-research",
+        heartbeat: {
+          every: "2h",
+          target: "none",
+          prompt: "Read HEARTBEAT.md. Search for new findings. Log results to FINDINGS.md. Reply HEARTBEAT_OK when done.",
+        },
+      },
+      {
+        id: "builder",
+        name: "Builder",
+        workspace: "~/.openclaw/workspace-builder",
+        heartbeat: {
+          every: "4h",
+          target: "telegram",
+          activeHours: { start: "08:00", end: "22:00" },
+          prompt: "Read HEARTBEAT.md. Check FINDINGS.md in research workspace for new items. If actionable, plan integration. Reply HEARTBEAT_OK if nothing to do.",
+        },
+      },
+    ],
+  },
+
+  bindings: [
+    { agentId: "ops", match: { channel: "telegram" } },
+    { agentId: "research", match: { channel: "webchat", peer: { kind: "direct", id: "research" } } },
+    { agentId: "builder", match: { channel: "webchat", peer: { kind: "direct", id: "builder" } } },
+  ],
+
+  models: {
+    mode: "merge",
+    providers: {
+      minimax: {
+        baseUrl: "https://api.minimax.io/anthropic",
+        apiKey: "${MINIMAX_API_KEY}",
+        api: "anthropic-messages",
+        models: [
+          {
+            id: "MiniMax-M2.1",
+            name: "MiniMax M2.1",
+            reasoning: false,
+            input: ["text"],
+            cost: { input: 15, output: 60, cacheRead: 2, cacheWrite: 10 },
+            contextWindow: 200000,
+            maxTokens: 8192,
+          },
+        ],
+      },
+      lmstudio: {
+        baseUrl: "http://127.0.0.1:1234/v1",
+        apiKey: "lmstudio",
+        api: "openai-responses",
+        models: [
+          {
+            id: "heartbeat-local",
+            name: "Local Heartbeat (Qwen 3 4B)",
+            reasoning: false,
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 8192,
+            maxTokens: 1024,
+          },
+        ],
+      },
+    },
+  },
+
+  channels: {
+    telegram: {
+      enabled: true,
+      botToken: "${TELEGRAM_BOT_TOKEN}",
+      allowFrom: [], // Add your Telegram user ID
+    },
+  },
+
+  cron: {
+    enabled: true,
+    maxConcurrentRuns: 1,
+  },
+
+  tools: {
+    allow: ["exec", "read", "write", "edit", "apply_patch", "web"],
+    exec: {
+      backgroundMs: 30000,
+      timeoutSec: 300,
+    },
+  },
+
+  gateway: {
+    mode: "local",
+    port: 18789,
+    bind: "loopback",
+    controlUi: { enabled: true },
+  },
+}

@@ -223,6 +223,19 @@ export type SessionUsageEntry = {
   contextWeight?: SessionSystemPromptReport | null;
 };
 
+export type HeartbeatCostSummary = {
+  /** Total heartbeat runs counted */
+  runs: number;
+  /** Cost of heartbeat runs on hosted models */
+  hostedCost: number;
+  /** Cost of heartbeat runs on local models ($0) */
+  localCost: number;
+  /** Estimated savings from using local models for heartbeats */
+  estimatedSavings: number;
+  /** Breakdown by model */
+  byModel: Array<{ provider: string; model: string; runs: number; cost: number; isLocal: boolean }>;
+};
+
 export type SessionsUsageAggregates = {
   messages: SessionMessageCounts;
   tools: SessionToolUsage;
@@ -230,6 +243,7 @@ export type SessionsUsageAggregates = {
   byProvider: SessionModelUsage[];
   byAgent: Array<{ agentId: string; totals: CostUsageSummary["totals"] }>;
   byChannel: Array<{ channel: string; totals: CostUsageSummary["totals"] }>;
+  heartbeat?: HeartbeatCostSummary;
   latency?: SessionLatencyStats;
   dailyLatency?: SessionDailyLatency[];
   modelDaily?: SessionDailyModelUsage[];

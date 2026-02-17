@@ -31,6 +31,7 @@ export type AuthChoice =
   | "minimax-api"
   | "minimax-api-lightning"
   | "minimax-portal"
+  | "budget-local"
   | "opencode-zen"
   | "github-copilot"
   | "copilot-proxy"

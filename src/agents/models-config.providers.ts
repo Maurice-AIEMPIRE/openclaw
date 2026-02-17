@@ -69,6 +69,17 @@ const QWEN_PORTAL_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+const LMSTUDIO_BASE_URL = "http://127.0.0.1:1234/v1";
+const LMSTUDIO_API_BASE_URL = "http://127.0.0.1:1234";
+const LMSTUDIO_DEFAULT_CONTEXT_WINDOW = 8192;
+const LMSTUDIO_DEFAULT_MAX_TOKENS = 1024;
+const LMSTUDIO_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 const OLLAMA_BASE_URL = "http://127.0.0.1:11434/v1";
 const OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
 const OLLAMA_DEFAULT_CONTEXT_WINDOW = 128000;
@@ -147,6 +158,84 @@ async function discoverOllamaModels(): Promise<ModelDefinitionConfig[]> {
     console.warn(`Failed to discover Ollama models: ${String(error)}`);
     return [];
   }
+}
+
+interface LmStudioModel {
+  id: string;
+  object?: string;
+  owned_by?: string;
+}
+
+interface LmStudioModelsResponse {
+  data: LmStudioModel[];
+}
+
+/**
+ * Discover models available on the local LM Studio server.
+ * Uses the OpenAI-compatible /v1/models endpoint.
+ * Returns empty array if LM Studio is not running or unreachable.
+ */
+async function discoverLmStudioModels(): Promise<ModelDefinitionConfig[]> {
+  // Skip discovery in test environments
+  if (process.env.VITEST || process.env.NODE_ENV === "test") {
+    return [];
+  }
+  try {
+    const response = await fetch(`${LMSTUDIO_API_BASE_URL}/v1/models`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const data = (await response.json()) as LmStudioModelsResponse;
+    if (!data.data || data.data.length === 0) {
+      return [];
+    }
+    return data.data.map((model) => {
+      const modelId = model.id;
+      const isReasoning =
+        modelId.toLowerCase().includes("r1") || modelId.toLowerCase().includes("reasoning");
+      // Small context for heartbeat use; users can override in config
+      return {
+        id: modelId,
+        name: modelId,
+        reasoning: isReasoning,
+        input: ["text"] as Array<"text" | "image">,
+        cost: LMSTUDIO_DEFAULT_COST,
+        contextWindow: LMSTUDIO_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: LMSTUDIO_DEFAULT_MAX_TOKENS,
+      };
+    });
+  } catch {
+    // LM Studio not running — this is expected and not an error
+    return [];
+  }
+}
+
+/**
+ * Check if LM Studio is reachable at its default port.
+ */
+export async function isLmStudioAvailable(): Promise<boolean> {
+  if (process.env.VITEST || process.env.NODE_ENV === "test") {
+    return false;
+  }
+  try {
+    const response = await fetch(`${LMSTUDIO_API_BASE_URL}/v1/models`, {
+      signal: AbortSignal.timeout(2000),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function buildLmStudioProvider(): Promise<ProviderConfig> {
+  const models = await discoverLmStudioModels();
+  return {
+    baseUrl: LMSTUDIO_BASE_URL,
+    api: "openai-responses",
+    models,
+  };
 }
 
 function normalizeApiKeyConfig(value: string): string {
@@ -526,6 +615,21 @@ export async function resolveImplicitProviders(params: {
       models: [buildCloudflareAiGatewayModelDefinition()],
     };
     break;
+  }
+
+  // LM Studio provider - auto-detect if running on default port
+  const lmstudioKey =
+    resolveEnvApiKeyVarName("lmstudio") ??
+    resolveApiKeyFromProfiles({ provider: "lmstudio", store: authStore });
+  if (lmstudioKey) {
+    // Explicitly configured — always add
+    providers.lmstudio = { ...(await buildLmStudioProvider()), apiKey: lmstudioKey };
+  } else if (await isLmStudioAvailable()) {
+    // Auto-detected — add with placeholder key (LM Studio doesn't require auth)
+    const lmstudioProvider = await buildLmStudioProvider();
+    if (lmstudioProvider.models && lmstudioProvider.models.length > 0) {
+      providers.lmstudio = { ...lmstudioProvider, apiKey: "lmstudio" };
+    }
   }
 
   // Ollama provider - only add if explicitly configured

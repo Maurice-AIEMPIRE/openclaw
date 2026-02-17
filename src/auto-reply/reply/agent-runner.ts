@@ -447,6 +447,7 @@ export async function runReplyAgent(params: {
         channel: replyToChannel,
         provider: providerUsed,
         model: modelUsed,
+        isHeartbeat,
         usage: {
           input,
           output,

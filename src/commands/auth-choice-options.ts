@@ -20,6 +20,7 @@ export type AuthChoiceGroupId =
   | "xiaomi"
   | "opencode-zen"
   | "minimax"
+  | "budget-local"
   | "synthetic"
   | "venice"
   | "qwen"
@@ -56,6 +57,12 @@ const AUTH_CHOICE_GROUP_DEFS: {
     label: "MiniMax",
     hint: "M2.1 (recommended)",
     choices: ["minimax-portal", "minimax-api", "minimax-api-lightning"],
+  },
+  {
+    value: "budget-local",
+    label: "Budget Local",
+    hint: "MiniMax + LM Studio heartbeats (~$50/mo)",
+    choices: ["budget-local"],
   },
   {
     value: "moonshot",
@@ -236,6 +243,11 @@ export function buildAuthChoiceOptions(params: {
     value: "minimax-api-lightning",
     label: "MiniMax M2.1 Lightning",
     hint: "Faster, higher output cost",
+  });
+  options.push({
+    value: "budget-local",
+    label: "Budget Local (MiniMax + LM Studio heartbeats)",
+    hint: "MiniMax brain + free local heartbeats (~$50/mo)",
   });
   if (params.includeSkip) {
     options.push({ value: "skip", label: "Skip for now" });
