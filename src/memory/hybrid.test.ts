@@ -6,6 +6,10 @@ describe("memory hybrid helpers", () => {
     expect(buildFtsQuery("hello world")).toBe('"hello" AND "world"');
     expect(buildFtsQuery("FOO_bar baz-1")).toBe('"FOO_bar" AND "baz" AND "1"');
     expect(buildFtsQuery("   ")).toBeNull();
+    // Unicode: umlauts, CJK, and mixed
+    expect(buildFtsQuery("Müller Straße")).toBe('"Müller" AND "Straße"');
+    expect(buildFtsQuery("こんにちは world")).toBe('"こんにちは" AND "world"');
+    expect(buildFtsQuery("café résumé")).toBe('"café" AND "résumé"');
   });
 
   it("bm25RankToScore is monotonic and clamped", () => {
