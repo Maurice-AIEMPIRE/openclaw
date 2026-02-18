@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import { checkIntegrationsCommand } from "../../commands/check-integrations.js";
 import { healthCommand } from "../../commands/health.js";
 import { sessionsCommand } from "../../commands/sessions.js";
 import { statusCommand } from "../../commands/status.js";
@@ -142,5 +143,23 @@ export function registerStatusHealthSessionsCommands(program: Command) {
         },
         defaultRuntime,
       );
+    });
+
+  program
+    .command("check-integrations")
+    .description("Check system integrations (channels + model providers)")
+    .option("--json", "Output JSON instead of text", false)
+    .addHelpText(
+      "after",
+      () =>
+        `\n${theme.heading("Examples:")}\n${formatHelpExamples([
+          ["openclaw check-integrations", "Check all system integrations."],
+          ["openclaw check-integrations --json", "Machine-readable output."],
+        ])}`,
+    )
+    .action(async (opts) => {
+      await runCommandWithRuntime(defaultRuntime, async () => {
+        await checkIntegrationsCommand({ json: Boolean(opts.json) }, defaultRuntime);
+      });
     });
 }

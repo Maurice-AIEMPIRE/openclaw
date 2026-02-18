@@ -1,7 +1,19 @@
 import type { ChannelAccountSnapshot } from "../channels/plugins/types.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
+import { resolveOpenClawAgentDir } from "../agents/agent-paths.js";
 import { resolveDefaultAgentId } from "../agents/agent-scope.js";
+import {
+  type AuthHealthSummary,
+  type AuthProviderHealth,
+  buildAuthHealthSummary,
+} from "../agents/auth-health.js";
+import {
+  ensureAuthProfileStore,
+  isProfileInCooldown,
+  resolveAuthProfileOrder,
+  resolveProfileUnusableUntilForDisplay,
+} from "../agents/auth-profiles.js";
 import { resolveChannelDefaultAccountId } from "../channels/plugins/helpers.js";
 import { getChannelPlugin, listChannelPlugins } from "../channels/plugins/index.js";
 import { withProgress } from "../cli/progress.js";
@@ -43,6 +55,17 @@ export type AgentHealthSummary = {
   sessions: HealthSummary["sessions"];
 };
 
+export type ModelProviderHealthSummary = {
+  provider: string;
+  status: "ok" | "degraded" | "unavailable";
+  profileCount: number;
+  availableProfiles: number;
+  cooldownProfiles: number;
+  authStatus?: AuthProviderHealth["status"];
+  /** Earliest cooldown expiry for profiles in cooldown (epoch ms). */
+  cooldownUntil?: number;
+};
+
 export type HealthSummary = {
   /**
    * Convenience top-level flag for UIs (e.g. WebChat) that only need a binary
@@ -59,6 +82,7 @@ export type HealthSummary = {
   heartbeatSeconds: number;
   defaultAgentId: string;
   agents: AgentHealthSummary[];
+  modelProviders?: ModelProviderHealthSummary[];
   sessions: {
     path: string;
     count: number;
@@ -382,6 +406,65 @@ export const formatHealthChannelLines = (
   return lines;
 };
 
+function gatherModelProviderHealth(
+  cfg: ReturnType<typeof loadConfig>,
+): ModelProviderHealthSummary[] {
+  try {
+    const agentDir = resolveOpenClawAgentDir();
+    const authStore = ensureAuthProfileStore(agentDir, { allowKeychainPrompt: false });
+    const authHealth = buildAuthHealthSummary({ store: authStore, cfg });
+
+    return authHealth.providers.map((providerHealth) => {
+      const profileIds = resolveAuthProfileOrder({
+        cfg,
+        store: authStore,
+        provider: providerHealth.provider,
+      });
+
+      let availableProfiles = 0;
+      let cooldownProfiles = 0;
+      let earliestCooldownUntil: number | undefined;
+
+      for (const profileId of profileIds) {
+        if (isProfileInCooldown(authStore, profileId)) {
+          cooldownProfiles += 1;
+          const unusableUntil = resolveProfileUnusableUntilForDisplay(authStore, profileId);
+          if (
+            unusableUntil &&
+            (earliestCooldownUntil === undefined || unusableUntil < earliestCooldownUntil)
+          ) {
+            earliestCooldownUntil = unusableUntil;
+          }
+        } else {
+          availableProfiles += 1;
+        }
+      }
+
+      const totalProfiles = profileIds.length;
+      let status: ModelProviderHealthSummary["status"];
+      if (totalProfiles === 0 || availableProfiles === 0) {
+        status = "unavailable";
+      } else if (cooldownProfiles > 0) {
+        status = "degraded";
+      } else {
+        status = "ok";
+      }
+
+      return {
+        provider: providerHealth.provider,
+        status,
+        profileCount: totalProfiles,
+        availableProfiles,
+        cooldownProfiles,
+        authStatus: providerHealth.status,
+        cooldownUntil: earliestCooldownUntil,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function getHealthSnapshot(params?: {
   timeoutMs?: number;
   probe?: boolean;
@@ -539,6 +622,9 @@ export async function getHealthSnapshot(params?: {
     }
   }
 
+  // Gather model provider health
+  const modelProviders = gatherModelProviderHealth(cfg);
+
   const summary: HealthSummary = {
     ok: true,
     ts: Date.now(),
@@ -549,6 +635,7 @@ export async function getHealthSnapshot(params?: {
     heartbeatSeconds,
     defaultAgentId,
     agents,
+    modelProviders,
     sessions: {
       path: sessions.path,
       count: sessions.count,
@@ -734,6 +821,32 @@ export async function healthCommand(
         runtime,
         includeChannelPrefix: true,
       });
+    }
+
+    // Display model provider health
+    const modelProviders = summary.modelProviders ?? [];
+    if (modelProviders.length > 0) {
+      const providerLines = modelProviders.map((mp) => {
+        const statusLabel =
+          mp.status === "ok"
+            ? theme.success("ok")
+            : mp.status === "degraded"
+              ? theme.warn("degraded")
+              : theme.error("unavailable");
+        let detail = `${mp.provider}: ${statusLabel}`;
+        if (mp.cooldownProfiles > 0) {
+          const cooldownInfo =
+            mp.cooldownUntil && mp.cooldownUntil > Date.now()
+              ? ` (${formatDurationParts(mp.cooldownUntil - Date.now())} remaining)`
+              : "";
+          detail += ` (${mp.cooldownProfiles}/${mp.profileCount} in cooldown${cooldownInfo})`;
+        }
+        return detail;
+      });
+      runtime.log(info("Model providers:"));
+      for (const line of providerLines) {
+        runtime.log(`  ${line}`);
+      }
     }
 
     if (resolvedAgents.length > 0) {

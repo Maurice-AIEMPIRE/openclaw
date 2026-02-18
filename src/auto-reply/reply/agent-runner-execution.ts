@@ -577,11 +577,15 @@ export async function runAgentTurnWithFallback(params: {
 
       defaultRuntime.error(`Embedded agent failed before reply: ${message}`);
       const trimmedMessage = message.replace(/\.\s*$/, "");
+      const isAllModelsFailed = /^All models failed/i.test(message);
+      const isAllImageModelsFailed = /^All image models failed/i.test(message);
       const fallbackText = isContextOverflow
         ? "⚠️ Context overflow — prompt too large for this model. Try a shorter message or a larger-context model."
         : isRoleOrderingError
           ? "⚠️ Message ordering conflict - please try again. If this persists, use /new to start a fresh session."
-          : `⚠️ Agent failed before reply: ${trimmedMessage}.\nLogs: openclaw logs --follow`;
+          : isAllModelsFailed || isAllImageModelsFailed
+            ? buildAllModelsFailedMessage(message)
+            : `⚠️ Agent failed before reply: ${trimmedMessage}.\nLogs: openclaw logs --follow`;
 
       return {
         kind: "final",
@@ -601,4 +605,57 @@ export async function runAgentTurnWithFallback(params: {
     autoCompactionCompleted,
     directlySentBlockKeys: directlySentBlockKeys.size > 0 ? directlySentBlockKeys : undefined,
   };
+}
+
+/**
+ * Build a user-friendly error message when all model providers have failed.
+ * Extracts provider names and failure reasons from the raw error to produce
+ * an actionable, non-technical message for end users (e.g. Telegram).
+ */
+export function buildAllModelsFailedMessage(rawMessage: string): string {
+  const providerSegments = rawMessage
+    .replace(/^All (?:image )?models failed \(\d+\):\s*/i, "")
+    .split(/\s*\|\s*/)
+    .filter(Boolean);
+
+  const isCooldown = providerSegments.every((s) => /cooldown|rate_limit/i.test(s));
+  const isBilling = providerSegments.every((s) => /billing/i.test(s));
+  const isAuth = providerSegments.every((s) => /auth|unauthorized|401/i.test(s));
+
+  const providerNames = providerSegments
+    .map((s) => {
+      const match = s.match(/^([^/:]+)/);
+      return match ? match[1].trim() : null;
+    })
+    .filter((name): name is string => Boolean(name));
+  const uniqueProviders = [...new Set(providerNames)];
+  const providerList =
+    uniqueProviders.length > 0 ? uniqueProviders.join(", ") : "configured providers";
+
+  if (isCooldown) {
+    return (
+      `⚠️ All AI models are temporarily rate-limited (${providerList}).\n` +
+      `Please wait a few minutes and try again.\n` +
+      `Tip: Run "openclaw models list --check" to see provider status.`
+    );
+  }
+  if (isBilling) {
+    return (
+      `⚠️ All AI models have billing/credit issues (${providerList}).\n` +
+      `Please check your API keys and account balance.\n` +
+      `Run "openclaw models list --check" to review provider status.`
+    );
+  }
+  if (isAuth) {
+    return (
+      `⚠️ Authentication failed for all AI models (${providerList}).\n` +
+      `Please verify your API keys with "openclaw models list --check".`
+    );
+  }
+
+  return (
+    `⚠️ All AI models failed (${providerList}).\n` +
+    `Please check system status with "openclaw models list --check".\n` +
+    `Logs: openclaw logs --follow`
+  );
 }
