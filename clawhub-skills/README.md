@@ -6,15 +6,16 @@ These skills are designed to be installed individually rather than bundled in Op
 
 ## Skills
 
-| Skill              | Description                                                                      |
-| ------------------ | -------------------------------------------------------------------------------- |
-| **blog-publisher** | Publish posts to Hugo, Jekyll, Astro, Next.js, Ghost, and WordPress              |
-| **site-deployer**  | Deploy sites to Vercel, Netlify, Cloudflare Pages, GitHub Pages, Fly.io, Railway |
-| **voice-clone**    | Clone and generate voices via ElevenLabs API                                     |
-| **research-scout** | AI research digest from HackerNews, GitHub, Reddit, ArXiv                        |
-| **creative-mode**  | Brainstorm, content sprint, and story modes for content creation                 |
-| **agent-manager**  | Multi-agent orchestration with commander, researcher, creator, deployer, voice   |
-| **gh-issues**      | Auto-fix GitHub issues with parallel sub-agents and PR review handling           |
+| Skill                  | Description                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| **blog-publisher**     | Publish posts to Hugo, Jekyll, Astro, Next.js, Ghost, and WordPress              |
+| **site-deployer**      | Deploy sites to Vercel, Netlify, Cloudflare Pages, GitHub Pages, Fly.io, Railway |
+| **voice-clone**        | Clone and generate voices via ElevenLabs API                                     |
+| **research-scout**     | AI research digest from HackerNews, GitHub, Reddit, ArXiv                        |
+| **creative-mode**      | Brainstorm, content sprint, and story modes for content creation                 |
+| **agent-manager**      | Multi-agent orchestration with commander, researcher, creator, deployer, voice   |
+| **gh-issues**          | Auto-fix GitHub issues with parallel sub-agents and PR review handling           |
+| **telegram-always-on** | Keep the gateway + Telegram running permanently via PM2, systemd, or LaunchAgent |
 
 ## Install
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ai.openclaw.gateway</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>node</string>
+        <string>scripts/run-node.mjs</string>
+        <string>gateway</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>OPENCLAW_DIR_PLACEHOLDER</string>
+
+    <!-- Load env from file if present -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>TELEGRAM_BOT_TOKEN</key>
+        <string>REPLACE_WITH_YOUR_TOKEN</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>Crashed</key>
+        <true/>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+
+    <key>StandardOutPath</key>
+    <string>OPENCLAW_DIR_PLACEHOLDER/logs/gateway.log</string>
+    <key>StandardErrorPath</key>
+    <string>OPENCLAW_DIR_PLACEHOLDER/logs/gateway-error.log</string>
+</dict>
+</plist>

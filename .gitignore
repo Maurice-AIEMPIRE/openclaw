@@ -93,3 +93,7 @@ package-lock.json
 OPENCLAW_DOCS_ALL.md
 PR_DESCRIPTION.md
 OpenClaw_AI_6h_Kurs_Transkription.txt
+
+# Gateway log files (keep directory via .gitkeep)
+logs/*.log
+logs/*.log.*

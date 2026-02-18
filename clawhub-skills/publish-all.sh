@@ -31,6 +31,7 @@ SKILLS=(
   "creative-mode:Creative Mode"
   "agent-manager:Agent Manager"
   "gh-issues:GitHub Issues Auto-Fix"
+  "telegram-always-on:Telegram Always-On Setup"
 )
 
 echo "Publishing ${#SKILLS[@]} skills to ClawHub (v${VERSION})"
